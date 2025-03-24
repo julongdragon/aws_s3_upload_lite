@@ -43,6 +43,7 @@ class AwsS3 {
 
     /// The filename to upload as.
     required String filename,
+    String? endpoint,
 
     /// The key to save this file as. Will override destDir and filename if set.
     String? key,
@@ -71,7 +72,9 @@ class AwsS3 {
       if (useSSL) {
         httpStr += 's';
       }
-      final endpoint = '$httpStr://$bucket.s3.$region.amazonaws.com';
+      // final endpoint = '$httpStr://$bucket.s3.$region.amazonaws.com';
+      final resolvedEndpoint =
+          endpoint ?? '$httpStr://$bucket.s3.$region.amazonaws.com';
 
       String? uploadKey;
 
@@ -86,7 +89,7 @@ class AwsS3 {
       final stream = http.ByteStream(Stream.castFrom(file.openRead()));
       final length = await file.length();
 
-      final uri = Uri.parse(endpoint);
+      final uri = Uri.parse(resolvedEndpoint);
       final req = MultipartRequest("POST", uri, onProgress: onUploadProgress);
       final multipartFile = http.MultipartFile('file', stream, length,
           filename: path.basename(file.path));
@@ -120,7 +123,7 @@ class AwsS3 {
       req.fields['X-Amz-Signature'] = signature;
       req.fields['Content-Type'] = contentType;
 
-      if(sessionToken != null){
+      if (sessionToken != null) {
         req.fields['X-Amz-Security-Token'] = sessionToken;
       }
 
@@ -265,7 +268,7 @@ class AwsS3 {
       req.fields['Policy'] = policy.encode();
       req.fields['X-Amz-Signature'] = signature;
       req.fields['Content-Type'] = contentType;
-      if(sessionToken != null){
+      if (sessionToken != null) {
         req.fields['X-Amz-Security-Token'] = sessionToken;
       }
       // If metadata isn't null, add metadata params to the request.
@@ -399,7 +402,7 @@ class AwsS3 {
       req.fields['X-Amz-Signature'] = signature;
       req.fields['Content-Type'] = contentType;
 
-      if(sessionToken != null){
+      if (sessionToken != null) {
         req.fields['X-Amz-Security-Token'] = sessionToken;
       }
 
@@ -412,7 +415,7 @@ class AwsS3 {
       if (headers != null) {
         req.headers.addAll(headers);
       }
-      
+
       try {
         final res = await req.send();
 
